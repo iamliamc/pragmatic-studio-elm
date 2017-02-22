@@ -51,14 +51,16 @@ type Msg
     | Sort
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            { model
+            ( { model
                 | gameNumber = model.gameNumber + 1
                 , entries = initialEntries
-            }
+              }
+            , Cmd.none
+            )
 
         Mark id ->
             let
@@ -68,10 +70,10 @@ update msg model =
                     else
                         e
             in
-                { model | entries = List.map markEntry model.entries }
+                ( { model | entries = List.map markEntry model.entries }, Cmd.none )
 
         Sort ->
-            { model | entries = List.sortBy .points model.entries }
+            ( { model | entries = List.sortBy .points model.entries }, Cmd.none )
 
 
 
@@ -163,7 +165,7 @@ viewScore sum =
 view : Model -> Html Msg
 view model =
     div [ class "content" ]
-        [ viewHeader "BUZZWORD BINGO"
+        [ viewHeader "BUZZWORD BINGO!"
         , viewPlayer model.name model.gameNumber
         , viewEntryList model.entries
         , viewScore (sumMarkedPoints model.entries)
@@ -178,8 +180,9 @@ view model =
 
 main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { model = initialModel
+    Html.program
+        { init = ( initialModel, Cmd.none )
         , view = view
         , update = update
+        , subscriptions = (\_ -> Sub.none)
         }
