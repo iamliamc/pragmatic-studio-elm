@@ -93,3 +93,20 @@ Debug returns value
 Suppose you want to log the model returned by a branch in the update function
     NewRandom randomNumber ->
     ( Debug.log "model" { model | gameNumber = randomNumber }, Cmd.none )
+
+Decoding JSON to Elm values
+> json = "{\"id\":1, \"phrase\":\"Future-Proof\", \"points\":100}"
+"{\"id\":1, \"phrase\":\"Future-Proof\", \"points\":100}" : String
+> idDecoder = field "id" int
+<decoder> : Json.Decode.Decoder Int
+> result = decodeString idDecoder json
+Ok 1 : Result.Result String Int
+> ageDecoder = field "age" int
+<decoder> : Json.Decode.Decoder Int
+> result = decodeString ageDecoder json
+Err "Expecting an object with a field named `age` but instead got: {\"id\":1,\"phrase\":\"Future-Proof\",\"points\":100}"
+    : Result.Result String Int
+  > Entry
+  <function> : Int -> String -> Int -> Bool -> Bingo.Entry
+  > entryDecoder = map3 Entry idDecoder phraseDecoder pointsDecoder
+  <decoder> : Json.Decode.Decoder (Bool -> Bingo.Entry)
