@@ -76,3 +76,20 @@ Have to switch from beginnerProgram to Program to enable Cmd
 Subscriptions register interest in websock message or location changes
 
 Command is all data no effect... Elm Runtime runs command, update is runned again that includes the commands result
+
+Result is a Union Type:
+> String.toInt
+<function> : String -> Result.Result String Int
+> String.toInt "1"
+Ok 1 : Result.Result String Int
+> String.toInt "A"
+Err "could not convert string 'A' to an Int" : Result.Result String Int
+
+How to run multiple commands:
+NewGame ->
+    ( model, Cmd.batch [ generateRandomNumber, getEntries ] )
+
+Debug returns value
+Suppose you want to log the model returned by a branch in the update function
+    NewRandom randomNumber ->
+    ( Debug.log "model" { model | gameNumber = randomNumber }, Cmd.none )

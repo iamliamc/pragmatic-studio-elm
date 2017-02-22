@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Random
+import Http
 
 
 -- MODEL
@@ -28,20 +29,18 @@ initialModel : Model
 initialModel =
     { name = "Liam"
     , gameNumber = 1
-    , entries = initialEntries
+    , entries = []
     }
 
 
-initialEntries : List Entry
-initialEntries =
-    [ Entry 1 "Future-Proof" 300 False
-    , Entry 2 "Doing Agile" 200 False
-    , Entry 3 "In The Cloud" 400 False
-    , Entry 4 "Rock-Star Ninja" 100 False
-    ]
 
-
-
+-- initialEntries : List Entry
+-- initialEntries =
+--     [ Entry 1 "Future-Proof" 300 False
+--     , Entry 2 "Doing Agile" 200 False
+--     , Entry 3 "In The Cloud" 400 False
+--     , Entry 4 "Rock-Star Ninja" 100 False
+--     ]
 -- UPDATE
 -- defines a union type enumerates possible values
 
@@ -51,6 +50,7 @@ type Msg
     | Mark Int
     | NewRandom Int
     | Sort
+    | NewEntries (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -60,7 +60,21 @@ update msg model =
             ( { model | gameNumber = randomNumber }, Cmd.none )
 
         NewGame ->
-            ( { model | entries = initialEntries }, generateRandomNumber )
+            ( { model | gameNumber = model.gameNumber + 1 }, getEntries )
+
+        NewEntries (Ok jsonString) ->
+            let
+                _ =
+                    Debug.log "It Worked!" jsonString
+            in
+                ( model, Cmd.none )
+
+        NewEntries (Err error) ->
+            let
+                _ =
+                    Debug.log "Oops!" error
+            in
+                ( model, Cmd.none )
 
         Mark id ->
             let
@@ -85,7 +99,22 @@ generateRandomNumber =
     Random.generate NewRandom (Random.int 1 100)
 
 
+entriesUrl : String
+entriesUrl =
+    "http://localhost:3000/random-entries"
 
+
+getEntries : Cmd Msg
+getEntries =
+    entriesUrl
+        |> Http.getString
+        |> Http.send NewEntries
+
+
+
+-- Http.send NewEntries (Http.getString entriesUrl)
+-- send : (Result Error a -> msg) -> Request a -> Cmd msg
+-- (Result Http.Error String -> Msg) -> Request String -> Cmd Msg
 -- VIEW
 
 
@@ -190,7 +219,7 @@ view model =
 main : Program Never Model Msg
 main =
     Html.program
-        { init = ( initialModel, generateRandomNumber )
+        { init = ( initialModel, getEntries )
         , view = view
         , update = update
         , subscriptions = (always Sub.none)
