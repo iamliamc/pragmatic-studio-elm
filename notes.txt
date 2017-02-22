@@ -56,3 +56,9 @@ Html.beginnerProgram
 , view = view
 , update = update
 }
+
+Updating Records in Elm:
+> person
+{ first = "Fred", last = "Flintstone" } : { first : String, last : String }
+> newPerson = { person | first =  "Wilma" }
+{ first = "Wilma", last = "Flintstone" } : { last : String, first : String }
