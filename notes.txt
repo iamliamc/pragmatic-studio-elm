@@ -57,8 +57,16 @@ Html.beginnerProgram
 , update = update
 }
 
-Updating Records in Elm:
+Updating Records in Elm (What you see happening in update model often):
 > person
 { first = "Fred", last = "Flintstone" } : { first : String, last : String }
 > newPerson = { person | first =  "Wilma" }
 { first = "Wilma", last = "Flintstone" } : { last : String, first : String }
+
+Example of passing anonymous function to List.filter
+> List.filter
+<function> : (a -> Bool) -> List a -> List a
+> numbers = List.range -3 3
+[-3,-2,-1,0,1,2,3] : List Int
+> List.filter (\n -> n > 0) numbers
+[1,2,3] : List Int

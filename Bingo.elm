@@ -40,11 +40,6 @@ initialEntries =
     ]
 
 
-allEntriesMarked : List Entry -> Bool
-allEntriesMarked entries =
-    List.all .marked entries
-
-
 
 -- UPDATE
 -- defines a union type enumerates possible values
@@ -131,12 +126,47 @@ viewEntryList entries =
         ul [] listOfEntries
 
 
+
+-- .marked is the same as an anonymous function (\e -> e.marked) that access the values of marked filed takes an entry returns a boolean
+
+
+allEntriesMarked : List Entry -> Bool
+allEntriesMarked entries =
+    List.all .marked entries
+
+
+sumMarkedPoints : List Entry -> Int
+sumMarkedPoints entries =
+    -- let
+    --     markedEntries =
+    --         List.filter entries
+    --
+    --     pointValues =
+    --         List.map .points markedEntries
+    -- in
+    --     List.sum pointValues
+    entries
+        |> List.filter .marked
+        |> List.map .points
+        |> List.sum
+
+
+viewScore : Int -> Html Msg
+viewScore sum =
+    div
+        [ class "score" ]
+        [ span [ class "label" ] [ text "Score" ]
+        , span [ class "value" ] [ text (toString sum) ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "content" ]
         [ viewHeader "BUZZWORD BINGO"
         , viewPlayer model.name model.gameNumber
         , viewEntryList model.entries
+        , viewScore (sumMarkedPoints model.entries)
         , div [ class "button-group" ]
             [ button [ onClick NewGame ] [ text "New Game" ]
             , button [ onClick Sort ] [ text "Sort Entries by Points" ]
