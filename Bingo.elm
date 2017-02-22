@@ -4,7 +4,24 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 
 
--- type annotation
+-- MODEL
+
+
+initialModel =
+    { name = "Liam"
+    , gameNumber = 1
+    , entries = initialEntries
+    }
+
+
+initialEntries =
+    [ { id = 1, phrase = "Future-Proof", points = 100, marked = False }
+    , { id = 2, phrase = "Doing Agile", points = 200, marked = False }
+    ]
+
+
+
+-- VIEW
 
 
 playerInfo : String -> Int -> String
@@ -38,17 +55,21 @@ viewFooter =
         ]
 
 
-view : Html msg
-view =
+
+-- view : Html msg
+
+
+view model =
     div [ class "content" ]
         [ viewHeader "BUZZWORD BINGO"
-        , viewPlayer "Nicole" 6
+        , viewPlayer model.name model.gameNumber
+        , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
 
 
 main =
-    view
+    view initialModel
 
 
 
@@ -65,4 +86,19 @@ main =
 -- half x = x // 2
 -- <function> : Int -> Int
 -- Type annotations help make clear the contract of functions
+-- When you call a function with the "incorrect number of arguments" it passes back partially applied function
+-- all functions in elm are curried "don't need to pass all the arguments at once"
 -- playerInfo : String -> Int -> String
+-- threeTimes = String.repeat 3
+-- threeTimes "ho"
+-- "hohoho" : String
+-- "WOW" |> String.repeat 3 |> String.pad 20 '*' ### both return partially applied functions and then use "WOW" as final argument
+-- > names = ["Liam", "Patty", "Mooch"]
+-- ["Liam","Patty","Mooch"] : List String
+-- List.map
+-- <function : (a -> b) -> List a -> List b
+-- -- create partially applied function that satisifies the argument (a -> b) of List.map
+-- starStudded = String.pad 10 '*'
+-- <function : String - String
+-- List.map starStudded names
+-- ["***Liam***","***Patty**","***Mooch**"] : List String
