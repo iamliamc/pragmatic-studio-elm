@@ -26,7 +26,7 @@ type alias Entry =
 initialModel : Model
 initialModel =
     { name = "Liam"
-    , gameNumber = 2
+    , gameNumber = 1
     , entries = initialEntries
     }
 
@@ -49,6 +49,13 @@ type Msg
     = NewGame
 
 
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        NewGame ->
+            { model | gameNumber = model.gameNumber + 1 }
+
+
 
 -- VIEW
 
@@ -58,7 +65,7 @@ playerInfo name gameNumber =
     name ++ " - Game #" ++ (toString gameNumber)
 
 
-viewPlayer : String -> Int -> Html msg
+viewPlayer : String -> Int -> Html Msg
 viewPlayer name gameNumber =
     let
         playerInfoText =
@@ -70,13 +77,13 @@ viewPlayer name gameNumber =
             [ playerInfoText ]
 
 
-viewHeader : String -> Html msg
+viewHeader : String -> Html Msg
 viewHeader title =
     header []
         [ h1 [] [ text title ] ]
 
 
-viewFooter : Html msg
+viewFooter : Html Msg
 viewFooter =
     footer []
         [ a [ href "http://elm-lang.org" ]
@@ -84,7 +91,7 @@ viewFooter =
         ]
 
 
-viewEntryItem : Entry -> Html msg
+viewEntryItem : Entry -> Html Msg
 viewEntryItem entry =
     li []
         [ span [ class "phrase" ] [ text entry.phrase ]
@@ -92,7 +99,7 @@ viewEntryItem entry =
         ]
 
 
-viewEntryList : List Entry -> Html msg
+viewEntryList : List Entry -> Html Msg
 viewEntryList entries =
     let
         listOfEntries =
@@ -101,52 +108,23 @@ viewEntryList entries =
         ul [] listOfEntries
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     div [ class "content" ]
         [ viewHeader "BUZZWORD BINGO"
         , viewPlayer model.name model.gameNumber
         , viewEntryList model.entries
-        , div [ class "button-group" NewGame ]
-            [ button [ onClick ] [ text "New Game" ] ]
+        , div [ class "button-group" ]
+            [ button [ onClick NewGame ] [ text "New Game" ] ]
         , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
 
 
+main : Program Never Model Msg
 main =
-    view initialModel
-
-
-
--- Example of Anonymous function
--- String.filter (\c -> c == 'e') "eieio"
--- isKeeper c = c == 'e'
--- String.filter isKeeper "eieio"
--- Elm has Type Inference (it can infer based on types of actions,
--- feels dynamic but with benefits of compcile time type checking (not runtime))
--- greet name = "Hi, " ++ name
--- <function> : String -> String
--- half x = x / 2
--- <function> : Float -> Float
--- half x = x // 2
--- <function> : Int -> Int
--- Type annotations help make clear the contract of functions
--- When you call a function with the "incorrect number of arguments" it passes back partially applied function
--- all functions in elm are curried "don't need to pass all the arguments at once"
--- playerInfo : String -> Int -> String
--- threeTimes = String.repeat 3
--- threeTimes "ho"
--- "hohoho" : String
--- "WOW" |> String.repeat 3 |> String.pad 20 '*' ### both return partially applied functions and then use "WOW" as final argument
--- > names = ["Liam", "Patty", "Mooch"]
--- ["Liam","Patty","Mooch"] : List String
--- List.map
--- <function : (a -> b) -> List a -> List b
--- -- create partially applied function that satisifies the argument (a -> b) of List.map
--- starStudded = String.pad 10 '*'
--- <function : String - String
--- List.map starStudded names
--- ["***Liam***","***Patty**","***Mooch**"] : List String
--- Type aliases are essentially constructors for objects
--- In Elm anytime a user interacts with the page a 'message/actions/events' is generated
+    Html.beginnerProgram
+        { model = initialModel
+        , view = view
+        , update = update
+        }
