@@ -74,3 +74,5 @@ Example of passing anonymous function to List.filter
 Elm calls ---> Http Request / Websockets or Writing to Local Storage -> Effects
 Have to switch from beginnerProgram to Program to enable Cmd
 Subscriptions register interest in websock message or location changes
+
+Command is all data no effect... Elm Runtime runs command, update is runned again that includes the commands result
