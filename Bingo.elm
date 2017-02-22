@@ -2,22 +2,51 @@ module Bingo exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 
 
 -- MODEL
 
 
+type alias Model =
+    { name : String
+    , gameNumber : Int
+    , entries : List Entry
+    }
+
+
+type alias Entry =
+    { id : Int
+    , phrase : String
+    , points : Int
+    , marked : Bool
+    }
+
+
+initialModel : Model
 initialModel =
     { name = "Liam"
-    , gameNumber = 1
+    , gameNumber = 2
     , entries = initialEntries
     }
 
 
+initialEntries : List Entry
 initialEntries =
-    [ { id = 1, phrase = "Future-Proof", points = 100, marked = False }
-    , { id = 2, phrase = "Doing Agile", points = 200, marked = False }
+    [ Entry 1 "Future-Proof" 100 False
+    , Entry 2 "Doing Agile" 200 False
+    , Entry 3 "In The Cloud" 300 False
+    , Entry 4 "Rock-Star Ninja" 400 False
     ]
+
+
+
+-- UPDATE
+-- defines a union type enumerates possible values
+
+
+type Msg
+    = NewGame
 
 
 
@@ -55,14 +84,31 @@ viewFooter =
         ]
 
 
+viewEntryItem : Entry -> Html msg
+viewEntryItem entry =
+    li []
+        [ span [ class "phrase" ] [ text entry.phrase ]
+        , span [ class "points" ] [ text (toString entry.points) ]
+        ]
 
--- view : Html msg
+
+viewEntryList : List Entry -> Html msg
+viewEntryList entries =
+    let
+        listOfEntries =
+            List.map viewEntryItem entries
+    in
+        ul [] listOfEntries
 
 
+view : Model -> Html msg
 view model =
     div [ class "content" ]
         [ viewHeader "BUZZWORD BINGO"
         , viewPlayer model.name model.gameNumber
+        , viewEntryList model.entries
+        , div [ class "button-group" NewGame ]
+            [ button [ onClick ] [ text "New Game" ] ]
         , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
@@ -102,3 +148,5 @@ main =
 -- <function : String - String
 -- List.map starStudded names
 -- ["***Liam***","***Patty**","***Mooch**"] : List String
+-- Type aliases are essentially constructors for objects
+-- In Elm anytime a user interacts with the page a 'message/actions/events' is generated
