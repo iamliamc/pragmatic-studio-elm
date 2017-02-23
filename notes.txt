@@ -110,3 +110,7 @@ Err "Expecting an object with a field named `age` but instead got: {\"id\":1,\"p
   <function> : Int -> String -> Int -> Bool -> Bingo.Entry
   > entryDecoder = map3 Entry idDecoder phraseDecoder pointsDecoder
   <decoder> : Json.Decode.Decoder (Bool -> Bingo.Entry)
+
+Maybe Key Defaults:
+Maybe.withDefault "Anonymous" maybeName
+(List.head numbers) |> Maybe.andThen (\n -> Just(n * 3))
