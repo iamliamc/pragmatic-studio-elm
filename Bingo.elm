@@ -8,6 +8,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder, field, succeed)
 import Json.Encode as Encode
 import ViewHelpers exposing (..)
+import Entry
 
 
 -- MODEL
@@ -21,18 +22,10 @@ type GameState
 type alias Model =
     { name : String
     , gameNumber : Int
-    , entries : List Entry
+    , entries : List Entry.Entry
     , alertMessage : Maybe String
     , nameInput : String
     , gameState : GameState
-    }
-
-
-type alias Entry =
-    { id : Int
-    , phrase : String
-    , points : Int
-    , marked : Bool
     }
 
 
@@ -71,7 +64,7 @@ type Msg
     | Mark Int
     | NewRandom Int
     | Sort
-    | NewEntries (Result Http.Error (List Entry))
+    | NewEntries (Result Http.Error (List Entry.Entry))
     | CloseAlert
     | ShareScore
     | NewScore (Result Http.Error Score)
@@ -133,14 +126,7 @@ update msg model =
             ( { model | alertMessage = Just (httpErrorToMessage error) }, Cmd.none )
 
         Mark id ->
-            let
-                markEntry e =
-                    if e.id == id then
-                        { e | marked = (not e.marked) }
-                    else
-                        e
-            in
-                ( { model | entries = List.map markEntry model.entries }, Cmd.none )
+            ( { model | entries = Entry.markEntryWithId model.entries id }, Cmd.none )
 
         Sort ->
             ( { model | entries = List.sortBy .points model.entries }, Cmd.none )
@@ -177,15 +163,6 @@ httpErrorToMessage error =
 -- DECODERS / ENCODERS
 
 
-entryDecoder : Decoder Entry
-entryDecoder =
-    Decode.map4 Entry
-        (field "id" Decode.int)
-        (field "phrase" Decode.string)
-        (field "points" Decode.int)
-        (succeed False)
-
-
 scoreDecoder : Decoder Score
 scoreDecoder =
     Decode.map3 Score
@@ -198,7 +175,7 @@ encodeScore : Model -> Encode.Value
 encodeScore model =
     Encode.object
         [ ( "name", Encode.string model.name )
-        , ( "score", Encode.int (sumMarkedPoints model.entries) )
+        , ( "score", Encode.int (Entry.sumMarkedPoints model.entries) )
         ]
 
 
@@ -239,9 +216,7 @@ postScore model =
 
 getEntries : Cmd Msg
 getEntries =
-    (Decode.list entryDecoder)
-        |> Http.get entriesUrl
-        |> Http.send NewEntries
+    Entry.getEntries NewEntries entriesUrl
 
 
 
@@ -273,51 +248,18 @@ viewFooter =
         ]
 
 
-viewEntryItem : Entry -> Html Msg
-viewEntryItem entry =
-    li [ classList [ ( "marked", entry.marked ) ], onClick (Mark entry.id) ]
-        [ span [ class "phrase" ] [ text entry.phrase ]
-        , span [ class "points" ] [ text (toString entry.points) ]
-        ]
-
-
-viewEntryList : List Entry -> Html Msg
-viewEntryList entries =
-    let
-        listOfEntries =
-            List.map viewEntryItem entries
-    in
-        ul [] listOfEntries
-
-
 
 -- .marked is the same as an anonymous function (\e -> e.marked) that access the values of marked filed takes an entry returns a boolean
 
 
-allEntriesMarked : List Entry -> Bool
+allEntriesMarked : List Entry.Entry -> Bool
 allEntriesMarked entries =
     List.all .marked entries
 
 
-sumMarkedPoints : List Entry -> Int
-sumMarkedPoints entries =
-    -- let
-    --     markedEntries =
-    --         List.filter entries
-    --
-    --     pointValues =
-    --         List.map .points markedEntries
-    -- in
-    --     List.sum pointValues
-    entries
-        |> List.filter .marked
-        |> List.map .points
-        |> List.sum
-
-
 zeroScore : Model -> Bool
 zeroScore model =
-    (sumMarkedPoints model.entries) == 0
+    (Entry.sumMarkedPoints model.entries) == 0
 
 
 viewScore : Int -> Html Msg
@@ -336,8 +278,8 @@ view model =
         , viewPlayer model.name model.gameNumber
         , viewAlertMessage CloseAlert model.alertMessage
         , viewNameInput model
-        , viewEntryList model.entries
-        , viewScore (sumMarkedPoints model.entries)
+        , Entry.viewEntryList Mark model.entries
+        , viewScore (Entry.sumMarkedPoints model.entries)
         , div [ class "button-group" ]
             [ primaryButton NewGame "New Game"
             , primaryButton Sort "Sort"
