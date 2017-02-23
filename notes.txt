@@ -140,4 +140,4 @@ viewNameInput model =
 
         Playing ->
             text ""
-And show parts of the view etc. 
+And show parts of the view etc.

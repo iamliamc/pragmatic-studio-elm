@@ -5,10 +5,9 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Random
 import Http
-import Json.Decode as Decode exposing (Decoder, field, succeed)
-import Json.Encode as Encode
 import ViewHelpers exposing (..)
 import Entry
+import Score
 
 
 -- MODEL
@@ -29,13 +28,6 @@ type alias Model =
     }
 
 
-type alias Score =
-    { id : Int
-    , name : String
-    , score : Int
-    }
-
-
 initialModel : Model
 initialModel =
     { name = "Anonymous"
@@ -48,13 +40,6 @@ initialModel =
 
 
 
--- initialEntries : List Entry
--- initialEntries =
---     [ Entry 1 "Future-Proof" 300 False
---     , Entry 2 "Doing Agile" 200 False
---     , Entry 3 "In The Cloud" 400 False
---     , Entry 4 "Rock-Star Ninja" 100 False
---     ]
 -- UPDATE
 -- defines a union type enumerates possible values
 
@@ -67,7 +52,7 @@ type Msg
     | NewEntries (Result Http.Error (List Entry.Entry))
     | CloseAlert
     | ShareScore
-    | NewScore (Result Http.Error Score)
+    | NewScore (Result Http.Error Score.Score)
     | SetNameInput String
     | SaveName
     | CancelName
@@ -161,25 +146,7 @@ httpErrorToMessage error =
 
 
 -- DECODERS / ENCODERS
-
-
-scoreDecoder : Decoder Score
-scoreDecoder =
-    Decode.map3 Score
-        (field "id" Decode.int)
-        (field "name" Decode.string)
-        (field "score" Decode.int)
-
-
-encodeScore : Model -> Encode.Value
-encodeScore model =
-    Encode.object
-        [ ( "name", Encode.string model.name )
-        , ( "score", Encode.int (Entry.sumMarkedPoints model.entries) )
-        ]
-
-
-
+-- See Score.elm & Entry.elm
 -- COMMANDS
 
 
@@ -200,18 +167,7 @@ entriesUrl =
 
 postScore : Model -> Cmd Msg
 postScore model =
-    let
-        url =
-            apiUrlPrefix ++ "/scores"
-
-        body =
-            encodeScore model
-                |> Http.jsonBody
-
-        request =
-            Http.post url body scoreDecoder
-    in
-        Http.send NewScore request
+    Score.postScore NewScore apiUrlPrefix model.name (Entry.sumMarkedPoints model.entries)
 
 
 getEntries : Cmd Msg
@@ -220,9 +176,6 @@ getEntries =
 
 
 
--- Http.send NewEntries (Http.getString entriesUrl)
--- send : (Result Error a -> msg) -> Request a -> Cmd msg
--- (Result Http.Error String -> Msg) -> Request String -> Cmd Msg
 -- VIEW
 
 
@@ -262,15 +215,6 @@ zeroScore model =
     (Entry.sumMarkedPoints model.entries) == 0
 
 
-viewScore : Int -> Html Msg
-viewScore sum =
-    div
-        [ class "score" ]
-        [ span [ class "label" ] [ text "Score:" ]
-        , span [ class "value" ] [ text (toString sum) ]
-        ]
-
-
 view : Model -> Html Msg
 view model =
     div [ class "content" ]
@@ -279,7 +223,7 @@ view model =
         , viewAlertMessage CloseAlert model.alertMessage
         , viewNameInput model
         , Entry.viewEntryList Mark model.entries
-        , viewScore (Entry.sumMarkedPoints model.entries)
+        , Score.viewScore (Entry.sumMarkedPoints model.entries)
         , div [ class "button-group" ]
             [ primaryButton NewGame "New Game"
             , primaryButton Sort "Sort"
