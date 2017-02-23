@@ -175,6 +175,11 @@ encodeScore model =
 -- COMMANDS
 
 
+apiUrlPrefix : String
+apiUrlPrefix =
+    "http://localhost:3000"
+
+
 generateRandomNumber : Cmd Msg
 generateRandomNumber =
     Random.generate NewRandom (Random.int 1 100)
@@ -182,14 +187,14 @@ generateRandomNumber =
 
 entriesUrl : String
 entriesUrl =
-    "http://localhost:3000/random-entries"
+    apiUrlPrefix ++ "/random-entries"
 
 
 postScore : Model -> Cmd Msg
 postScore model =
     let
         url =
-            "http://localhost:3000/scores"
+            apiUrlPrefix ++ "/scores"
 
         body =
             encodeScore model
@@ -288,6 +293,11 @@ sumMarkedPoints entries =
         |> List.sum
 
 
+zeroScore : Model -> Bool
+zeroScore model =
+    (sumMarkedPoints model.entries) == 0
+
+
 viewScore : Int -> Html Msg
 viewScore sum =
     div
@@ -308,7 +318,7 @@ view model =
         , div [ class "button-group" ]
             [ button [ onClick NewGame ] [ text "New Game" ]
             , button [ onClick Sort ] [ text "Sort" ]
-            , button [ onClick ShareScore ] [ text "Share Score" ]
+            , button [ onClick ShareScore, disabled (zeroScore model) ] [ text "Share Score" ]
             ]
         , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
