@@ -114,3 +114,30 @@ Err "Expecting an object with a field named `age` but instead got: {\"id\":1,\"p
 Maybe Key Defaults:
 Maybe.withDefault "Anonymous" maybeName
 (List.head numbers) |> Maybe.andThen (\n -> Just(n * 3))
+
+Union types work very well to use different application states:
+type GameState
+    = EnteringName
+    | Playing
+Various parts of the update schema set these to values...
+Then you casematch on the unionType statemachine
+viewNameInput : Model -> Html Msg
+viewNameInput model =
+    case model.gameState of
+        EnteringName ->
+            div [ class "name-input" ]
+                [ input
+                    [ type_ "text"
+                    , placeholder "Who's Playing"
+                    , value model.nameInput
+                    , autofocus True
+                    , onInput SetNameInput
+                    ]
+                    []
+                , button [ onClick SaveName ] [ text "Save" ]
+                , button [ onClick CancelName ] [ text "Cancel" ]
+                ]
+
+        Playing ->
+            text ""
+And show parts of the view etc. 

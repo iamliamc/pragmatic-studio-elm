@@ -2,7 +2,7 @@ module Bingo exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Random
 import Http
 import Json.Decode as Decode exposing (Decoder, field, succeed)
@@ -12,11 +12,18 @@ import Json.Encode as Encode
 -- MODEL
 
 
+type GameState
+    = EnteringName
+    | Playing
+
+
 type alias Model =
     { name : String
     , gameNumber : Int
     , entries : List Entry
     , alertMessage : Maybe String
+    , nameInput : String
+    , gameState : GameState
     }
 
 
@@ -37,10 +44,12 @@ type alias Score =
 
 initialModel : Model
 initialModel =
-    { name = "Liam"
+    { name = "Anonymous"
     , gameNumber = 1
     , entries = []
     , alertMessage = Nothing
+    , nameInput = ""
+    , gameState = EnteringName
     }
 
 
@@ -65,11 +74,36 @@ type Msg
     | CloseAlert
     | ShareScore
     | NewScore (Result Http.Error Score)
+    | SetNameInput String
+    | SaveName
+    | CancelName
+    | ChangeGameState GameState
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ChangeGameState state ->
+            ( { model | gameState = state }, Cmd.none )
+
+        SaveName ->
+            if (String.isEmpty model.nameInput) then
+                ( { model | alertMessage = Just "Please Enter a Name" }, Cmd.none )
+            else
+                ( { model
+                    | name = model.nameInput
+                    , nameInput = ""
+                    , gameState = Playing
+                  }
+                , Cmd.none
+                )
+
+        CancelName ->
+            ( { model | nameInput = "", gameState = Playing }, Cmd.none )
+
+        SetNameInput value ->
+            ( { model | nameInput = value }, Cmd.none )
+
         NewRandom randomNumber ->
             ( { model | gameNumber = randomNumber }, Cmd.none )
 
@@ -220,21 +254,12 @@ getEntries =
 -- VIEW
 
 
-playerInfo : String -> Int -> String
-playerInfo name gameNumber =
-    name ++ " - Game #" ++ (toString gameNumber)
-
-
 viewPlayer : String -> Int -> Html Msg
 viewPlayer name gameNumber =
-    let
-        playerInfoText =
-            playerInfo name gameNumber
-                |> String.toUpper
-                |> text
-    in
-        h2 [ id "info", class "classy" ]
-            [ playerInfoText ]
+    h2 [ id "info", class "classy" ]
+        [ a [ href "#", onClick (ChangeGameState EnteringName) ] [ text name ]
+        , text (" - Game #" ++ (toString gameNumber))
+        ]
 
 
 viewHeader : String -> Html Msg
@@ -313,6 +338,7 @@ view model =
         [ viewHeader "BUZZWORD BINGO!"
         , viewPlayer model.name model.gameNumber
         , viewAlertMessage model.alertMessage
+        , viewNameInput model
         , viewEntryList model.entries
         , viewScore (sumMarkedPoints model.entries)
         , div [ class "button-group" ]
@@ -323,6 +349,27 @@ view model =
         , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
+
+
+viewNameInput : Model -> Html Msg
+viewNameInput model =
+    case model.gameState of
+        EnteringName ->
+            div [ class "name-input" ]
+                [ input
+                    [ type_ "text"
+                    , placeholder "Who's Playing"
+                    , value model.nameInput
+                    , autofocus True
+                    , onInput SetNameInput
+                    ]
+                    []
+                , button [ onClick SaveName ] [ text "Save" ]
+                , button [ onClick CancelName ] [ text "Cancel" ]
+                ]
+
+        Playing ->
+            text ""
 
 
 viewAlertMessage : Maybe String -> Html Msg
